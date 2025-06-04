@@ -8,7 +8,7 @@
 
 ## Ziel der App
 
-Deutschen Familien den komplexen Prozess der Auswanderung nach Südzypern zu erleichtern. Die App soll als zentraler Informations-Hub und Begleiter dienen, um Unsicherheiten zu reduzieren und die Vorbereitung sowie die ersten Schritte nach der Ankunft zu strukturieren.
+Deutschen Familien den komplexen Prozess der Auswanderung ins Ausland zu erleichtern. Die App soll als zentraler Informations-Hub und Begleiter dienen, um Unsicherheiten zu reduzieren und die Vorbereitung sowie die ersten Schritte nach der Ankunft zu strukturieren.
 
 ## Problemstellung
 
@@ -16,15 +16,15 @@ Die Auswanderung, besonders mit Familie, ist mit zahlreichen bürokratischen Hü
 
 ## Lösungsansatz (MVP)
 
-Die App bündelt relevante, recherchierte Informationen und interaktive Checklisten für die kritischen Phasen der Vorbereitung in Deutschland und der Ankunft in Südzypern. Sie nutzt Firebase als Backend und integriert eine externe API zur Anzeige relevanter Kontaktdaten.
+Die App bündelt relevante, recherchierte Informationen und interaktive Checklisten für die kritischen Phasen der Vorbereitung in Deutschland und der Ankunft im Zielland. Sie nutzt Firebase als Backend und integriert eine externe API zur Anzeige relevanter Kontaktdaten.
 
 ## Was macht die App anders/besser?
 
-Im Gegensatz zu allgemeinen Foren oder Webseiten, konzentriert sich EmigrateIn **gezielt auf deutsche Familien und den Start in Südzypern**. Sie bietet nicht nur Informationen, sondern **verknüpft diese direkt mit praktischen, interaktiven Checklisten**. Besonderer Wert wird auf die **Verlässlichkeit der Informationen** gelegt, indem auf offizielle Quellen verwiesen und der Informationsstand transparent gemacht wird.
+Im Gegensatz zu allgemeinen Foren oder Webseiten, konzentriert sich EmigrateIn **gezielt auf deutsche Familien und inital den Start in Südzypern**. Sie bietet nicht nur Informationen, sondern **verknüpft diese direkt mit praktischen, interaktiven Checklisten**. Besonderer Wert wird auf die **Verlässlichkeit der Informationen** gelegt, indem auf offizielle Quellen verwiesen und der Informationsstand transparent gemacht wird.
 
 ## Kern-Features (MVP V1.0 - Fokus: Deutsche Familien nach Südzypern)
 
-- [X] **Onboarding:** Nach dem Start durchläuft der Nutzer ein kurzes Onboarding. Über eine Hauptnavigation (z.B. Tab Bar) kann er auf die verschiedenen Info-Kategorien und Checklisten zugreifen. Informationen können gelesen, Checklistenpunkte abgehakt werden. Die Botschaftsinformationen werden dynamisch über eine API geladen.
+- [X] **Onboarding:** Nach dem Start durchläuft der Nutzer ein kurzes Onboarding. Über eine Hauptnavigation (Tab Bar) kann er auf die verschiedenen Info-Kategorien und Checklisten zugreifen. Informationen können gelesen, Checklistenpunkte abgehakt werden. Die Botschaftsinformationen werden dynamisch über eine API geladen.
 - [X] **Info-Hub**: Ein strukturierter Bereich mit aufbereiteten Informationen zu essenziellen Themen:
 - Visa & Einreise *(MEU1/Yellow Slip, MEU2)*
 - Ankunft & Erste Schritte *(Behördengänge: TIN, Sozialversicherung, GESY)*
@@ -36,7 +36,7 @@ Im Gegensatz zu allgemeinen Foren oder Webseiten, konzentriert sich EmigrateIn *
 - [X] **Interaktive Checklisten:** Detaillierte, abharkbare Checklisten für die Phasen:
 - Vorbereitung in Deutschland
 - Ankunft & Erste Schritte in Zypern
-- Speicherung des Fortschritts lokal `(SwiftData)` oder via Firebase Authentication.
+- Speicherung des Fortschritts lokal via Firebase Authentication.
 - [X] **Botschafts-Information:** Abruf und Anzeige der Kontaktdaten der Deutschen Botschaft in Nikosia über die OpenData-API des Auswärtigen Amtes `(travelwarning.api.bund.dev)`.
 - [X] **Fehlerbehandlung:** Nutzerfreundliche Anzeige von Fehlern *(z.B. bei Netzwerkproblemen oder API-Fehlern)* mittels Alerts.
 
@@ -66,9 +66,9 @@ Die App folgt dem **MVVM (Model-View-ViewModel)** Architekturmuster, das sich gu
 
 Um die ViewModels von der konkreten Datenquelle (Firebase, API, UserDefaults) zu entkoppeln und die Testbarkeit zu verbessern, setze ich das Repository Pattern ein:
 
-- **Services/Repositories:** Diese Klassen kapseln die Logik für den Datenzugriff. Es gibt z.B. ein `ContentRepository`, das für das Laden von Infos und Checklisten aus Firestore zuständig ist, und einen `ApiService` *(oder `EmbassyRepository`)*, der den API-Call zum Auswärtigen Amt durchführt. Die ViewModels kommunizieren nur mit diesen Repositories/Services, nicht direkt mit Firebase oder `URLSession`.
+- **Repositories:** Diese Klasse kapselt die Logik für den Datenzugriff. Es gibt z.B. ein `ContentRepository`, das für das Laden von Infos und Checklisten aus Firestore zuständig ist, und einem `EmbassyRepository`)*, das den API-Call zum Auswärtigen Amt durchführt. Die ViewModels kommunizieren nur mit diesen Repositories/Services, nicht direkt mit Firebase oder `URLSession`.
 
-  - *Ordner:* `Repositories` oder `Services`
+  - *Ordner:* `Repositories`
 
 ## Technologie-Stack
 
@@ -81,16 +81,19 @@ Um die ViewModels von der konkreten Datenquelle (Firebase, API, UserDefaults) zu
   - Authentifizierung: Firebase Authentication *(Optional für MVP, z.B. zur Speicherung des Checklisten-Status)*
 - **API-Anbindung:** `URLSession` mit `async/await` für den Aufruf der Auswärtiges-Amt-API.
 - **Daten-Parsing:** `Codable`für JSON-Daten aus Firebase und der API.
-- **Lokale Daten:** `SwiftData`für einfache Einstellungen oder Checklisten-Status.
+- **Lokale Daten:** `SwiftData`für einfache Einstellungen.
 
 ### Externe Abhängigkeiten / Frameworks
 Diese App nutzt externe Bibliotheken, die über den **Swift Package Manager (SPM)** eingebunden werden:
 
-1. FirebaseAuth: Dies ist das Firebase Authentication SDK, das Funktionen für die Benutzerauthentifizierung (Anmeldung, Registrierung, Abmeldung etc.) bereitstellt.
-2. FirebaseFirestore: Dies ist das Firebase Firestore SDK, das den Zugriff auf die NoSQL-Cloud-Datenbank Firestore ermöglicht.
-3. GoogleSignIn: Dies ist das Google Sign-In SDK, das die Anmeldung mit Google-Konten in der App ermöglicht.
-4. GoogleSignInSwift: Dies ist eine Swift-spezifische Erweiterungsbibliothek für das Google Sign-In SDK, die oft für eine einfachere Integration mit SwiftUI verwendet wird.
-
+1. FirebaseAuth:
+   - Dies ist das Firebase Authentication SDK, das Funktionen für die Benutzerauthentifizierung (Anmeldung, Registrierung, Abmeldung etc.) bereitstellt.
+3. FirebaseFirestore:
+   - Dies ist das Firebase Firestore SDK, das den Zugriff auf die NoSQL-Cloud-Datenbank Firestore ermöglicht.
+5. GoogleSignIn:
+   - Dies ist das Google Sign-In SDK, das die Anmeldung mit Google-Konten in der App ermöglicht.
+8. GoogleSignInSwift:
+   - Dies ist eine Swift-spezifische Erweiterungsbibliothek für das Google Sign-In SDK, die oft für eine einfachere Integration mit SwiftUI verwendet wird.
 
 ## Ausblick
 
@@ -126,7 +129,7 @@ Dieser Ausblick zeigt die geplante Entwicklung von einer fokussierten Starthilfe
 
 ## Danksagung
 
-- Vielen Dank an [Florian Rhein, Renan Wurster, Anna Hoff] für die unermüdliche Unterstützung und Hilfe bei jeglichem Problem. Lieben Dank auch an meine Kursbetreuerin [Lisa Kipp] für die Betreuung, gute Laune und Hilfe bei allen Fragen rund um den Kurs.
+- Vielen Dank an [Florian Rhein, Renan Wurster, Anna Hoff] für die unermüdliche Unterstützung und Hilfe bei jeglichem Problem. Lieben Dank auch an meine Kursbetreuerin [Lisa Kipp] für die Betreuung, immer guter Laune und Hilfe bei allen Fragen rund um den Kurs.
 - Inspiration und erste Informationen aus den Ressourcen von [AuswandernHilft.de].
 - Daten der deutschen Vertretungen bereitgestellt durch die OpenData-Schnittstelle des Auswärtigen Amtes.
 - Backend-Dienste bereitgestellt durch Google Firebase.
