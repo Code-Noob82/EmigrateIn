@@ -43,8 +43,12 @@ Im Gegensatz zu allgemeinen Foren oder Webseiten, konzentriert sich EmigrateIn *
 ## Design
 
 <p>
-  <img src="./img/Splash Screen.png" width="200">
-  <img src="./img/GetStarted.png" width="200">
+  <img src="./img/Screen1.png" width="200">
+  <img src="./img/Screen2.png" width="200">
+  <img src="./img/Screen3.png" width="200">
+  <img src="./img/Screen4.png" width="200">
+  <img src="./img/Screen5.png" width="200">
+  <img src="./img/Screen6.png" width="200">
 </p>
 
 ## Projektstruktur & Architektur Übersicht
