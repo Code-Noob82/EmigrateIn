@@ -51,20 +51,32 @@ struct AuthenticationView: View {
                 .toolbarBackground(.visible, for: .navigationBar)
                 .toolbarColorScheme(AppStyles.primaryTextColor.isDark ? .light : .dark, for: .navigationBar)
             }
-            // Zeigt die Bundesland-Auswahl als Sheet an, wenn nötig
-            .sheet(isPresented: $viewModel.showStateSelection) {
-                StateSelectionView()
+            .alert(item: $viewModel.activeError) { error in
+                Alert(
+                    title: Text(error.errorTitle),
+                    message: Text(error.errorDescription ?? "Unbekannter Fehler"),
+                    dismissButton: .default(Text("OK"))
+                )
             }
-            // Zeigt Fehlermeldungen an
-            .alert("Fehler", isPresented: .constant(viewModel.inlineMessage != nil), actions: {
-                Button("OK", role: .cancel) { viewModel.inlineMessage = nil }
-            }, message: {
-                Text(viewModel.inlineMessage ?? "Unbekannter Fehler")
-            })
+            .alert(
+                "Erfolg",
+                isPresented: Binding(
+                    get: { viewModel.successMessage != nil },
+                    set: { if !$0 { viewModel.successMessage = nil } }
+                )
+            ) {
+                Button("OK", role: .cancel) { viewModel.successMessage = nil }
+            } message: {
+                Text(viewModel.successMessage ?? "")
+            }
         }
     }
     
     private func titleForCurrentAuthView() -> String {
+        if viewModel.isUpgradingAnonymousUser {
+            return "Gastkonto registrieren"
+        }
+
         switch viewModel.currentAuthView {
         case .login: return "Anmelden"
         case .registration: return "Neu Registrieren"

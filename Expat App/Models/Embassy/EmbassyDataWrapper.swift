@@ -10,17 +10,17 @@ import Foundation
 // MARK: - Data Models für Auswärtiges Amt API
 
 // 1. Top-Level-Struktur der API-Antwort
-struct EmbassyDataWrapper: Codable {
+struct EmbassyDataWrapper: Decodable {
     let response: EmbassyResponseData
 }
 
 // 2. Inhalt des "response"-Objekts
-struct EmbassyResponseData: Codable {
+struct EmbassyResponseData: Decodable {
     let lastModified: Int
     let countryGroups: [String: EmbassyCountryGroup]
     
     private enum StaticCodingKeys: String, CodingKey {
-        case lastModified
+        case lastModified, contentList
     }
     
     private struct DynamicCountryCodingKey: CodingKey {
@@ -32,23 +32,23 @@ struct EmbassyResponseData: Codable {
     init(from decoder: Decoder) throws {
         let staticContainer = try decoder.container(keyedBy: StaticCodingKeys.self)
         self.lastModified = try staticContainer.decode(Int.self, forKey: .lastModified)
-        
+
         let dynamicContainer = try decoder.container(keyedBy: DynamicCountryCodingKey.self)
+        let listedGroupIDs = try staticContainer.decodeIfPresent([String].self, forKey: .contentList)
+        let groupIDs = listedGroupIDs ?? dynamicContainer.allKeys
+            .map(\.stringValue)
+            .filter { Int($0) != nil }
         var groups = [String: EmbassyCountryGroup]()
-        for key in dynamicContainer.allKeys {
-            if key.stringValue != "lastModified" && key.stringValue != "contentList" {
-                if let countryKey = DynamicCountryCodingKey(stringValue: key.stringValue) {
-                    let countryGroup = try dynamicContainer.decode(EmbassyCountryGroup.self, forKey: countryKey)
-                    groups[key.stringValue] = countryGroup
-                }
-            }
+        for groupID in groupIDs {
+            guard let countryKey = DynamicCountryCodingKey(stringValue: groupID) else { continue }
+            groups[groupID] = try dynamicContainer.decode(EmbassyCountryGroup.self, forKey: countryKey)
         }
         self.countryGroups = groups
     }
 }
 
 // 3. Struktur für eine Ländergruppe (z.B. Zypern mit ID "210268")
-struct EmbassyCountryGroup: Codable {
+struct EmbassyCountryGroup: Decodable {
     let lastModified: Int
     let country: String
     let representatives: [String: EmbassyRepresentativeInfo]
@@ -68,24 +68,27 @@ struct EmbassyCountryGroup: Codable {
         let staticContainer = try decoder.container(keyedBy: StaticCodingKeys.self)
         self.lastModified = try staticContainer.decode(Int.self, forKey: .lastModified)
         self.country = try staticContainer.decode(String.self, forKey: .country)
-        self.contentList = try staticContainer.decode([String].self, forKey: .contentList)
-        
+        let listedRepresentativeIDs = try staticContainer.decodeIfPresent([String].self, forKey: .contentList)
+        self.contentList = listedRepresentativeIDs ?? []
+
         let dynamicContainer = try decoder.container(keyedBy: DynamicRepresentativeCodingKeys.self)
+        let representativeIDs = listedRepresentativeIDs ?? dynamicContainer.allKeys
+            .map(\.stringValue)
+            .filter { Int($0) != nil }
         var reps = [String: EmbassyRepresentativeInfo]()
-        for key in dynamicContainer.allKeys {
-            if key.stringValue != "lastModified" && key.stringValue != "country" && key.stringValue != "contentList" {
-                if let representativesKey = DynamicRepresentativeCodingKeys(stringValue: key.stringValue) {
-                    let representativeInfo = try dynamicContainer.decode(EmbassyRepresentativeInfo.self, forKey: representativesKey)
-                    reps[key.stringValue] = representativeInfo
-                }
-            }
+        for representativeID in representativeIDs {
+            guard let representativeKey = DynamicRepresentativeCodingKeys(stringValue: representativeID) else { continue }
+            reps[representativeID] = try dynamicContainer.decode(
+                EmbassyRepresentativeInfo.self,
+                forKey: representativeKey
+            )
         }
         self.representatives = reps
     }
 }
 
 // 4. Struktur für die Details einer einzelnen Vertretung
-struct EmbassyRepresentativeInfo: Codable, Hashable {
+struct EmbassyRepresentativeInfo: Decodable, Hashable {
     let lastModified: Int
     let description: String?
     let leader: String?

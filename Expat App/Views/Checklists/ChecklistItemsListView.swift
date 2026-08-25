@@ -81,7 +81,6 @@ struct ChecklistItemsListView: View {
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarColorScheme(AppStyles.primaryTextColor.isDark ? .light : .dark, for: .navigationBar)
             .onAppear {
-                print("ChecklistItemsListView appeared for category: \(categoryId)")
                 Task {
                     await viewModel.fetchChecklistItemsAndCategoryDetails()
                 }
@@ -98,18 +97,19 @@ struct ChecklistItemsListView: View {
             
             // Checklisten-Items direkt im Grid (ohne Unterkategorien)
             let columns = [
-                GridItem(.flexible()),
-                GridItem(.flexible())
+                GridItem(.adaptive(minimum: 150, maximum: 260), spacing: 16)
             ]
             
             LazyVGrid(columns: columns, spacing: 16) {
                 ForEach(viewModel.items) { item in
-                    ChecklistItemGridItemView(item: item, viewModel: viewModel)
-                        .onTapGesture {
-                            Task {
-                                await viewModel.toggleItemCompletion(item: item)
-                            }
+                    Button {
+                        Task {
+                            await viewModel.toggleItemCompletion(item: item)
                         }
+                    } label: {
+                        ChecklistItemGridItemView(item: item, viewModel: viewModel)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
             .padding(.horizontal)

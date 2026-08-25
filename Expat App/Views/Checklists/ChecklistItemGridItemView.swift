@@ -11,9 +11,7 @@ struct ChecklistItemGridItemView: View {
     let item: ChecklistItem
     @ObservedObject var viewModel: ChecklistViewModel // Muss übergeben werden, um isItemCompleted zu prüfen
     
-    // MARK: - Body
     var body: some View {
-        let _ = print("ChecklistItemGridItemView body: Item '\(item.text)' (ID: \(item.id ?? "NIL")). Erwarteter Status: \(viewModel.isItemCompleted(item))")
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 // Checkbox-Icon: Verwendet viewModel.isItemCompleted(item)
@@ -45,7 +43,7 @@ struct ChecklistItemGridItemView: View {
             Spacer()
         }
         .padding(10)
-        .frame(width: 160, height: 120) // Feste Größe
+        .frame(maxWidth: .infinity, minHeight: 120)
         .background(
             RoundedRectangle(cornerRadius: 15)
                 .fill(AppStyles.cellBackgroundColor.opacity(0.5))
@@ -58,6 +56,10 @@ struct ChecklistItemGridItemView: View {
         .shadow(color: Color.black.opacity(0.1), radius: 3, x: 0, y: 3)
         // Animation beim Umschalten: Verwendet viewModel.isItemCompleted(item)
         .animation(.easeOut, value: viewModel.isItemCompleted(item))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(item.text)
+        .accessibilityValue(viewModel.isItemCompleted(item) ? "Erledigt" : "Nicht erledigt")
+        .accessibilityHint("Doppeltippen, um den Status zu ändern")
     }
 }
 

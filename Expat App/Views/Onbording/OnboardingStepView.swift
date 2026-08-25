@@ -11,6 +11,7 @@ import SwiftUI
 
 // Eine wiederverwendbare View für einzelne Schritte im Onboarding-Prozess.
 struct OnboardingStepView: View {
+    @ScaledMetric private var illustrationHeight = 150
     // Daten für diesen spezifischen Onboarding-Schritt
     let imageName: String
     let headline: String
@@ -28,9 +29,10 @@ struct OnboardingStepView: View {
                 Image(systemName: imageName)
                     .resizable()
                     .scaledToFit()
-                    .frame(height: 150)
+                    .frame(maxHeight: illustrationHeight)
                     .padding(.bottom, 30)
                     .foregroundColor(AppStyles.primaryTextColor)
+                    .accessibilityHidden(true)
                 // Überschrift
                 Text(headline)
                     .font(.title)
@@ -53,6 +55,8 @@ struct OnboardingStepView: View {
                             .frame(width: 8, height: 8)
                     }
                 }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Seite \(pageIndex + 1) von \(totalPages)")
                 .padding(.bottom, 20)
                 
                 Button(pageIndex == totalPages - 1 ? "Los geht's!" : "Weiter") {
@@ -94,7 +98,7 @@ struct OnboardingStepView: View {
         AppStyles.backgroundGradient.ignoresSafeArea()
         // Vorschau für den gesamten Onboarding-Flow
         OnboardingContainerView(finishAction: {
-            print("Onboarding abgeschlossen!")
+            // Vorschau ohne Seiteneffekt.
         })
     }
 }

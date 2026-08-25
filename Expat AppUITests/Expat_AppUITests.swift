@@ -7,7 +7,7 @@
 
 import XCTest
 
-final class Expat_AppUITests: XCTestCase {
+final class ExpatAppUITests: XCTestCase {
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
@@ -23,12 +23,18 @@ final class Expat_AppUITests: XCTestCase {
     }
 
     @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
+    func testOnboardingCanAdvanceToSecondPage() throws {
         let app = XCUIApplication()
+        app.launchArguments = ["-resetOnboarding", "-skipSplash"]
         app.launch()
 
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+        XCTAssertTrue(app.staticTexts["Willkommen bei EmigrateIn!"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.otherElements["Seite 1 von 4"].exists)
+
+        app.buttons["Weiter"].tap()
+
+        XCTAssertTrue(app.staticTexts["Infos & Checklisten an einem Ort"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.otherElements["Seite 2 von 4"].exists)
     }
 
     @MainActor

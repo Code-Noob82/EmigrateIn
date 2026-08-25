@@ -130,6 +130,7 @@
 			buildConfigurationList = DD0F5E972DA6BFE9007F9337 /* Build configuration list for PBXNativeTarget "Expat App" */;
 			buildPhases = (
 				DD0F5E722DA6BFE6007F9337 /* Sources */,
+				A1B2C3D4E5F60718293A4B5C /* SwiftLint */,
 				DD0F5E732DA6BFE6007F9337 /* Frameworks */,
 				DD0F5E742DA6BFE6007F9337 /* Resources */,
 			);
@@ -274,6 +275,28 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		A1B2C3D4E5F60718293A4B5C /* SwiftLint */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = SwiftLint;
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if command -v swiftlint >/dev/null 2>&1; then\n    swiftlint --config \"${SRCROOT}/.swiftlint.yml\"\nelse\n    echo \"warning: SwiftLint ist nicht installiert. Installation: brew install swiftlint\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		DD0F5E722DA6BFE6007F9337 /* Sources */ = {
@@ -441,8 +464,9 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = MTJZ4BBKT3;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Expat-App-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = EmigrateIn;
@@ -482,8 +506,9 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = MTJZ4BBKT3;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Expat-App-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = EmigrateIn;

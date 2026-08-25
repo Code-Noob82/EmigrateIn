@@ -10,7 +10,7 @@ import SwiftUI
 // MARK: - State Selection View
 
 struct StateSelectionView: View {
-    @EnvironmentObject var viewModel: AuthenticationViewModel
+    @EnvironmentObject var viewModel: UserProfileViewModel
     @Environment(\.dismiss) var dismiss // Zum Schließen des Sheets
     
     var body: some View {
@@ -38,7 +38,7 @@ struct StateSelectionView: View {
                         .padding(.bottom, 10)
                     
                     // Picker zur Auswahl des Bundeslandes
-                    Picker("Bundesland", selection: $viewModel.selectedStateId) {
+                    Picker("Bundesland", selection: $viewModel.selectedStateID) {
                         Text("Bitte auswählen").tag(nil as String?) // Platzhalter
                             .foregroundColor(AppStyles.primaryTextColor)
                         
@@ -57,9 +57,7 @@ struct StateSelectionView: View {
                     
                     Button("Speichern & Weiter") {
                         Task {
-                            viewModel.saveSelectedState()
-                            // Das Sheet wird automatisch geschlossen, wenn viewModel.isAuthenticated auf true wechselt
-                            // und die App-Logik dies steuert. Kein dismiss() hier, um den authViewModel Flow nicht zu stören.
+                            await viewModel.saveSelectedState()
                         }
                     }
                     .padding()
@@ -67,13 +65,13 @@ struct StateSelectionView: View {
                     .background(AppStyles.buttonBackgroundColor)
                     .foregroundColor(AppStyles.buttonTextColor)
                     .clipShape(Capsule()) // Jetzt eine Kapselform!
-                    .disabled(viewModel.selectedStateId == nil ||
+                    .disabled(viewModel.selectedStateID == nil ||
                               viewModel.isLoading) // Deaktivieren, wenn nichts ausgewählt oder am Laden
                     // Zusätzliche visuelle Deaktivierung, falls der Button-Stil nicht greift
-                    .opacity(viewModel.selectedStateId == nil ||
+                    .opacity(viewModel.selectedStateID == nil ||
                              viewModel.isLoading ? 0.6 : 1.0)
                     
-                    if let errorMessage = viewModel.inlineMessage {
+                    if let errorMessage = viewModel.errorMessage {
                         Text(errorMessage)
                             .foregroundColor(AppStyles.destructiveColor)
                             .font(.caption)
@@ -110,5 +108,5 @@ struct StateSelectionView: View {
 
 #Preview("State Selection View") {
     StateSelectionView()
-        .environmentObject(AuthenticationViewModel())
+        .environmentObject(UserProfileViewModel())
 }

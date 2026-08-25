@@ -2,300 +2,236 @@
 //  ProfileView.swift
 //  Expat App
 //
-//  Created by Dominik Baki on 30.04.25.
-//
 
 import SwiftUI
-import FirebaseFirestore
-
-// MARK: - Profile View
 
 struct ProfileView: View {
-    // Zugriff auf das AuthenticationViewModel aus der Umgebung
-    @EnvironmentObject var authViewModel: AuthenticationViewModel
-    @State private var editableDisplayName: String = "" // NEU: Für das TextField
+    @EnvironmentObject private var authenticationViewModel: AuthenticationViewModel
+    @EnvironmentObject private var profileViewModel: UserProfileViewModel
+    @EnvironmentObject private var accountDeletionViewModel: AccountDeletionViewModel
+    @Binding var selectedTab: TabSelection
+
+    @State private var editableDisplayName = ""
     @State private var isEditingDisplayName = false
-    
-    let globalBackgroundGradient = AppStyles.backgroundGradient
-    let headerBackground = AppStyles.backgroundGradient
-    
+
     var body: some View {
         NavigationStack {
-            VStack {
-                HStack {
-                    Text("Dein Konto")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(AppStyles.primaryTextColor)
-                    Spacer()
-                    Button {
-                        authViewModel.selectedTab = .settings
-                    } label: {
-                        Image(systemName: "gearshape.fill")
-                            .font(.title3)
-                            .foregroundColor(AppStyles.primaryTextColor)
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.vertical, 10)
-                .frame(maxWidth: .infinity)
-                .background(headerBackground)
-                .overlay(Divider(), alignment: .bottom)
-                
+            VStack(spacing: 0) {
+                header
                 ScrollView {
-                    VStack (spacing: 20) {
-                        if let displayName = authViewModel.userProfile?.displayName, !displayName.isEmpty {
-                            HStack {
-                                Text("Nutzerkonto von:")
-                                    .font(.callout)
-                                    .foregroundColor(AppStyles.secondaryTextColor)
-                                Spacer()
-                                Text(displayName)
-                                    .font(.callout)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(AppStyles.primaryTextColor)
-                                    .multilineTextAlignment(.trailing)
-                            }
-                            .padding(.horizontal)
+                    VStack(spacing: 20) {
+                        if authenticationViewModel.isAnonymousUser {
+                            guestCard
+                        } else {
+                            accountCard
+                            stateCard
                         }
-                        
-                        if !authViewModel.isAnonymousUser { // Nur für nicht-anonyme Nutzer relevant
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack {
-                                    Text("Anzeigename:")
-                                        .font(.headline)
-                                        .foregroundColor(AppStyles.primaryTextColor)
-                                    Spacer()
-                                    if !isEditingDisplayName { // "Ändern"-Button nur im Anzeigemodus
-                                        Button("Ändern") {
-                                            // Beim Starten des Bearbeitungsmodus:
-                                            // 1. editableDisplayName mit dem aktuellen Namen vorbelegen
-                                            self.editableDisplayName = authViewModel.userProfile?.displayName ?? ""
-                                            // 2. In den Bearbeitungsmodus wechseln
-                                            self.isEditingDisplayName = true
-                                            // 3. Alte Fehlermeldungen für diese Sektion löschen
-                                            if authViewModel.inlineMessage?.contains("Anzeigename") == true {
-                                                authViewModel.inlineMessage = nil
-                                            }
-                                            if authViewModel.successMessage?.contains("Anzeigename") == true {
-                                                authViewModel.successMessage = nil
-                                            }
-                                        }
-                                        .font(.callout)
-                                    }
-                                }
-                                
-                                if isEditingDisplayName {
-                                    // ---- Bearbeitungsmodus ----
-                                    TextField("Anzeigename eingeben", text: $editableDisplayName)
-                                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                                        .textContentType(.nickname)
-                                        .autocorrectionDisabled(true)
-                                    
-                                    HStack(spacing: 15) { // Buttons für Speichern und Abbrechen
-                                        Button("Speichern") {
-                                            Task {
-                                                await authViewModel.updateDisplayName(newName: editableDisplayName)
-                                                self.isEditingDisplayName = false
-                                            }
-                                        }
-                                        .buttonStyle(.borderedProminent)
-                                        .disabled(editableDisplayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
-                                                  editableDisplayName == (authViewModel.userProfile?.displayName ?? "") ||
-                                                  authViewModel.isLoading)
-                                        
-                                        Button("Abbrechen") {
-                                            self.isEditingDisplayName = false
-                                            self.editableDisplayName = authViewModel.userProfile?.displayName ?? ""
-                                        }
-                                        .buttonStyle(.bordered) // Anderer Stil für Abbrechen
-                                    }
-                                    .padding(.top, 5)
-                                    
-                                } else {
-                                    // ---- Anzeigemodus ----
-                                    // Zeigt den aktuellen Namen oder "Nicht festgelegt"
-                                    let currentName = authViewModel.userProfile?.displayName
-                                    Text((currentName != nil && !currentName!.isEmpty) ? currentName! : "Nicht festgelegt")
-                                        .font(.body)
-                                        .foregroundColor(AppStyles.secondaryTextColor)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                }
-                                
-                                // Erfolgs- oder Fehlermeldungen (relevant für Speichern)
-                                // Werden nur angezeigt, wenn eine Meldung da ist (und nicht im Anzeigemodus ohne Aktion)
-                                if authViewModel.isLoading && isEditingDisplayName { // Ladeindikator während des Speicherns
-                                    ProgressView()
-                                        .padding(.top, 5)
-                                } else if let successMessage = authViewModel.successMessage, successMessage.contains("Anzeigename") {
-                                    Text(successMessage)
-                                        .font(.caption)
-                                        .foregroundColor(.green)
-                                        .padding(.top, 2)
-                                        .onAppear { // Nachricht nach einiger Zeit ausblenden
-                                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                                                if authViewModel.successMessage?.contains("Anzeigename") == true {
-                                                    authViewModel.successMessage = nil
-                                                }
-                                            }
-                                        }
-                                } else if let errorMessage = authViewModel.inlineMessage, errorMessage.contains("Anzeigename") {
-                                    Text(errorMessage)
-                                        .font(.caption)
-                                        .foregroundColor(.red)
-                                        .padding(.top, 2)
-                                        .onAppear { // Nachricht nach einiger Zeit ausblenden
-                                            DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
-                                                if authViewModel.inlineMessage?.contains("Anzeigename") == true {
-                                                    authViewModel.inlineMessage = nil
-                                                }
-                                            }
-                                        }
-                                }
-                            }
-                            .padding()
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(AppStyles.cellBackgroundColor.opacity(0.5))
-                            .cornerRadius(20)
-                            .padding(.horizontal)
-                            
+
+                        if let errorMessage = profileViewModel.errorMessage ?? accountDeletionViewModel.errorMessage {
+                            messageView(errorMessage, color: AppStyles.destructiveColor)
+                        } else if let successMessage = profileViewModel.successMessage ?? accountDeletionViewModel.successMessage {
+                            messageView(successMessage, color: .green)
                         }
-                        if !authViewModel.email.isEmpty {
-                            HStack {
-                                Text("E-Mail:")
-                                    .font(.callout)
-                                    .foregroundColor(AppStyles.secondaryTextColor)
-                                Spacer()
-                                Text(authViewModel.email)
-                                    .font(.callout)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(AppStyles.primaryTextColor)
-                                    .multilineTextAlignment(.trailing)
-                            }
-                            .padding(.horizontal)
-                        }
-                        
-                        if let createdAtTimestamp = authViewModel.userProfile?.createdAt {
-                            HStack {
-                                Text("Konto erstellt am:")
-                                    .font(.callout)
-                                    .foregroundStyle(AppStyles.secondaryTextColor)
-                                Spacer()
-                                Text(createdAtTimestamp.dateFormatter())
-                                    .font(.callout)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(AppStyles.primaryTextColor)
-                                    .multilineTextAlignment(.trailing)
-                            }
-                            .padding(.horizontal)
-                        }
-                        
-                        if !authViewModel.isAnonymousUser { // Nur für nicht-anonyme Nutzer relevant
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Dein Bundesland:")
-                                    .font(.headline)
-                                    .foregroundColor(AppStyles.primaryTextColor)
-                                
-                                if let stateName = authViewModel.homeStateName { // Nutzt die Computed Property
-                                    Text(stateName)
-                                        .font(.body)
-                                        .foregroundColor(AppStyles.secondaryTextColor)
-                                } else {
-                                    Text("Nicht festgelegt")
-                                        .font(.body)
-                                        .foregroundColor(AppStyles.secondaryTextColor.opacity(0.7))
-                                }
-                                
-                                Button("Bundesland ändern") {
-                                    authViewModel.showStateSelection = true // Dieser Wert triggert das Sheet
-                                }
-                                .font(.callout)
-                                .padding(.top, 4)
-                                
-                                // MARK: Neuer NavigationLink zur StateDetailView
-                                NavigationLink {
-                                    StateDetailView()
-                                } label: {
-                                    Text("Details für dein Bundesland anzeigen")
-                                        .font(.callout)
-                                        .fontWeight(.medium)
-                                        .padding(.vertical, 8)
-                                        .frame(maxWidth: .infinity)
-                                        .background(AppStyles.buttonBackgroundColor.opacity(0.8))
-                                        .foregroundColor(AppStyles.buttonTextColor)
-                                        .clipShape(Capsule())
-                                }
-                                .padding(.top, 10)
-                            }
-                            .padding()
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(AppStyles.cellBackgroundColor.opacity(0.5))
-                            .cornerRadius(20)
-                            .padding(.horizontal)
-                        }
-                        Button {
-                            // Ruft die signOut Funktion direkt im authViewModel auf
-                            authViewModel.signOut()
-                        } label: {
-                            HStack {
-                                Image(systemName: "rectangle.portrait.and.arrow.right")
-                                Text("Ausloggen")
-                            }
-                            .foregroundColor(AppStyles.buttonTextColor)
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(AppStyles.buttonBackgroundColor)
-                            .clipShape(Capsule())
-                        }
-                        .padding(.horizontal)
-                        
-                        // Konto löschen Button
-                        Button("Konto löschen") {
-                            authViewModel.initiateAccountDeletion()
-                        }
-                        .foregroundColor(AppStyles.destructiveTextColor)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(AppStyles.destructiveColor)
-                        .clipShape(Capsule())
-                        .padding(.horizontal)
+
+                        accountActions
                     }
                     .padding(.vertical)
                 }
             }
-            .background(globalBackgroundGradient.ignoresSafeArea())
-            .navigationBarBackButtonHidden(true)
-            .alert("Konto löschen bestätigen", isPresented: $authViewModel.showPasswordReauthPrompt) {
-                SecureField("Passwort", text: $authViewModel.reauthPasswordInput)
+            .background(AppStyles.backgroundGradient.ignoresSafeArea())
+            .toolbar(.hidden, for: .navigationBar)
+            .overlay {
+                if profileViewModel.isLoading || accountDeletionViewModel.isLoading {
+                    ProgressView()
+                        .tint(AppStyles.primaryTextColor)
+                        .padding()
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                }
+            }
+            .alert(
+                authenticationViewModel.isAnonymousUser
+                    ? "Gastkonto endgültig löschen?"
+                    : "Konto endgültig löschen?",
+                isPresented: $accountDeletionViewModel.showConfirmation
+            ) {
+                if accountDeletionViewModel.requiresPassword {
+                    SecureField("Aktuelles Passwort", text: $accountDeletionViewModel.password)
+                }
                 Button("Löschen bestätigen", role: .destructive) {
-                    Task {
-                        await authViewModel.confirmAndDeleteAccount()
-                    }
+                    Task { await accountDeletionViewModel.deleteAccount() }
                 }
                 Button("Abbrechen", role: .cancel) {
-                    authViewModel.reauthPasswordInput = ""
-                    authViewModel.inlineMessage = nil
+                    accountDeletionViewModel.cancelDeletion()
                 }
             } message: {
-                Text("Bitte gib dein Passwort ein, um das Löschen deines Kontos zu bestätigen. Diese Aktion kann nicht rückgängig gemacht werden und alle deine Daten gehen verloren.")
+                Text(accountDeletionViewModel.confirmationMessage)
             }
             .onAppear {
-                self.editableDisplayName = authViewModel.userProfile?.displayName ?? ""
-                if authViewModel.successMessage?.contains("Anzeigename") == true {
-                    authViewModel.successMessage = nil
-                }
-                if authViewModel.inlineMessage?.contains("Anzeigename") == true {
-                    authViewModel.inlineMessage = nil
-                }
+                editableDisplayName = profileViewModel.userProfile?.displayName ?? ""
+                profileViewModel.clearMessages()
             }
-            .onChange(of: authViewModel.userProfile?.displayName) { oldName, newName in
-                self.editableDisplayName = newName ?? ""
+            .onChange(of: profileViewModel.userProfile?.displayName) { _, newName in
+                editableDisplayName = newName ?? ""
             }
         }
+    }
+
+    private var header: some View {
+        HStack {
+            Text("Dein Konto")
+                .font(.title2.bold())
+                .foregroundColor(AppStyles.primaryTextColor)
+            Spacer()
+            Button {
+                selectedTab = .settings
+            } label: {
+                Image(systemName: "gearshape.fill")
+                    .font(.title3)
+            }
+            .foregroundColor(AppStyles.primaryTextColor)
+            .accessibilityLabel("Einstellungen öffnen")
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 12)
+        .background(AppStyles.backgroundGradient)
+        .overlay(Divider(), alignment: .bottom)
+    }
+
+    private var guestCard: some View {
+        profileCard(title: "Gastkonto") {
+            Text("Als Gast kannst du Inhalte ansehen. Personalisierte Checklisten und Profildaten benötigen eine Registrierung.")
+                .foregroundColor(AppStyles.secondaryTextColor)
+        }
+    }
+
+    private var accountCard: some View {
+        profileCard(title: "Kontodaten") {
+            if isEditingDisplayName {
+                TextField("Anzeigename", text: $editableDisplayName)
+                    .textInputAutocapitalization(.words)
+                    .padding(10)
+                    .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10))
+                    .accessibilityLabel("Anzeigename")
+
+                HStack {
+                    Button("Abbrechen") {
+                        editableDisplayName = profileViewModel.userProfile?.displayName ?? ""
+                        isEditingDisplayName = false
+                    }
+                    Spacer()
+                    Button("Speichern") {
+                        Task {
+                            await profileViewModel.updateDisplayName(editableDisplayName)
+                            if profileViewModel.errorMessage == nil {
+                                isEditingDisplayName = false
+                            }
+                        }
+                    }
+                    .disabled(editableDisplayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            } else {
+                valueRow(label: "Name", value: profileViewModel.userProfile?.displayName ?? "Nicht festgelegt")
+                Button("Anzeigename ändern") {
+                    isEditingDisplayName = true
+                }
+                .font(.callout)
+            }
+
+            if let email = authenticationViewModel.session?.email, !email.isEmpty {
+                valueRow(label: "E-Mail", value: email)
+            }
+            if let createdAt = profileViewModel.userProfile?.createdAt {
+                valueRow(label: "Registriert", value: createdAt.dateValue().formatted(date: .abbreviated, time: .omitted))
+            }
+        }
+    }
+
+    private var stateCard: some View {
+        profileCard(title: "Bundesland") {
+            Text(profileViewModel.homeStateName ?? "Nicht festgelegt")
+                .foregroundColor(AppStyles.secondaryTextColor)
+
+            HStack {
+                Button("Bundesland ändern") {
+                    profileViewModel.showStateSelection = true
+                }
+                Spacer()
+                NavigationLink("Details") {
+                    StateDetailView()
+                }
+            }
+            .font(.callout)
+        }
+    }
+
+    private var accountActions: some View {
+        VStack(spacing: 12) {
+            if !authenticationViewModel.isAnonymousUser {
+                Button {
+                    authenticationViewModel.signOut()
+                } label: {
+                    Label("Ausloggen", systemImage: "rectangle.portrait.and.arrow.right")
+                        .frame(maxWidth: .infinity)
+                }
+                .primaryButtonStyle()
+                .accessibilityHint("Meldet das aktuelle Konto von diesem Gerät ab")
+            }
+
+            Button(role: .destructive) {
+                accountDeletionViewModel.prepareDeletion()
+            } label: {
+                Label(
+                    authenticationViewModel.isAnonymousUser ? "Gastkonto löschen" : "Konto löschen",
+                    systemImage: "trash"
+                )
+                    .frame(maxWidth: .infinity)
+                    .padding()
+            }
+            .background(AppStyles.destructiveColor, in: Capsule())
+            .foregroundColor(AppStyles.destructiveTextColor)
+            .accessibilityHint("Öffnet eine Bestätigung für die dauerhafte Kontolöschung")
+        }
+        .padding(.horizontal)
+    }
+
+    @ViewBuilder
+    private func profileCard<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(title)
+                .font(.headline)
+                .foregroundColor(AppStyles.primaryTextColor)
+            content()
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(AppStyles.cellBackgroundColor.opacity(0.5), in: RoundedRectangle(cornerRadius: 20))
+        .padding(.horizontal)
+    }
+
+    private func valueRow(label: String, value: String) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(label)
+                .foregroundColor(AppStyles.secondaryTextColor)
+            Spacer()
+            Text(value)
+                .foregroundColor(AppStyles.primaryTextColor)
+                .multilineTextAlignment(.trailing)
+        }
+    }
+
+    private func messageView(_ message: String, color: Color) -> some View {
+        Text(message)
+            .font(.callout)
+            .foregroundColor(color)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal)
+            .accessibilityLabel(message)
     }
 }
 
 #Preview("ProfileView") {
-    ProfileView()
+    ProfileView(selectedTab: .constant(.profile))
         .environmentObject(AuthenticationViewModel())
+        .environmentObject(UserProfileViewModel())
+        .environmentObject(AccountDeletionViewModel())
 }

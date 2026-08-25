@@ -11,13 +11,14 @@ import MarkdownUI
 
 struct InfoContentListView: View {
     @EnvironmentObject var authViewModel: AuthenticationViewModel
+    @EnvironmentObject var profileViewModel: UserProfileViewModel
     @StateObject private var viewModel: InfoContentViewModel
     @State private var showRegistrationPrompt = false
-    @State private var tappedContentItem: InfoContent? = nil
+    @State private var tappedContentItem: InfoContent?
     let category: InfoCategory
     let backgroundGradient = AppStyles.backgroundGradient
     // Wichtige Konstante: Die ID der Kategorie, welche die Bundesland-Details anzeigen soll
-    let STATE_INFO_CATEGORY_ID = "state_info_de"
+    let stateInfoCategoryID = "state_info_de"
     
     init(category: InfoCategory) {
         self.category = category
@@ -30,10 +31,9 @@ struct InfoContentListView: View {
                 .ignoresSafeArea()
             
             // Nur eine der folgenden Ansichten soll angezeigt werden.
-            if category.id == STATE_INFO_CATEGORY_ID {
-                // EXKLUSIV: Wenn es die spezielle Bundesland-Kategorie ist, zeige nur die StateDetailView.
-                StateDetailView() // <-- Hier wird die StateDetailView aufgerufen!
-                    .environmentObject(authViewModel) // Wichtig für den Zugriff auf selectedStateDetails
+            if category.id == stateInfoCategoryID {
+                StateDetailView()
+                    .environmentObject(profileViewModel)
             } else if viewModel.isLoading {
                 // Ansonsten, wenn es eine andere Kategorie ist und lädt...
                 ProgressView()
@@ -78,8 +78,7 @@ struct InfoContentListView: View {
                 // Ansonsten, wenn es eine andere Kategorie ist und Inhalte hat...
                 ScrollView {
                     let columns = [
-                        GridItem(.flexible()),
-                        GridItem(.flexible())
+                        GridItem(.adaptive(minimum: 150, maximum: 240), spacing: 16)
                     ]
                     LazyVGrid(columns: columns, spacing: 16) {
                         ForEach(viewModel.contentItems) { contentItem in
@@ -100,16 +99,18 @@ struct InfoContentListView: View {
         .toolbarBackground(backgroundGradient, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbarColorScheme(AppStyles.primaryTextColor.isDark ? .light : .dark, for: .navigationBar)
-        // Navigation für registrierte Nutzer
-        .navigationDestination(for: InfoContent.self) { specificInfoContent in
-            InfoContentDetailView(contentItem: specificInfoContent)
+        .task(id: authViewModel.session?.id) {
+            if authViewModel.isAuthenticated,
+               category.id != stateInfoCategoryID,
+               viewModel.contentItems.isEmpty,
+               viewModel.errorMessage == nil {
+                await viewModel.fetchContent()
+            }
         }
         // Alert für anonyme Nutzer
         .alert("Registrierung erforderlich", isPresented: $showRegistrationPrompt) {
             Button("Registrieren") {
-                Task {
-                    authViewModel.switchToRegistrationFromAnonymous()
-                }
+                authViewModel.switchToRegistrationFromAnonymous()
             }
             .foregroundColor(AppStyles.primaryTextColor)
             Button("Abbrechen", role: .cancel) {
@@ -117,7 +118,7 @@ struct InfoContentListView: View {
             }
             .foregroundColor(AppStyles.destructiveColor)
         } message: {
-            Text("Um die vollständigen Details sehen \nzu können, registriere dich bitte oder melde dich an.")
+            Text("Registriere dein Gastkonto, um die vollständigen Details sehen zu können.")
         }
     }
 }
@@ -132,4 +133,5 @@ struct InfoContentListView: View {
     )
     InfoContentListView(category: dummyCategory)
         .environmentObject(AuthenticationViewModel())
+        .environmentObject(UserProfileViewModel())
 }

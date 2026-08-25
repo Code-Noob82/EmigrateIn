@@ -36,9 +36,7 @@ class ChecklistCategoryViewModel: ObservableObject {
         do {
             let fetchedCategories = try await repository.fetchChecklistCategories() // Ruft die Repository-Funktion auf
             self.categories = fetchedCategories
-            print("Successfully fetched \(categories.count) checklist categories.")
         } catch {
-            print("Error fetching checklist categories: \(error.localizedDescription)")
             self.errorMessage = "Fehler beim Laden der Checklisten-Kategorien: \(error.localizedDescription)"
         }
         isLoading = false

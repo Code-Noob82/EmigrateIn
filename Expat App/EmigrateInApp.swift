@@ -6,28 +6,52 @@
 //
 
 import SwiftUI
-import Firebase
 import GoogleSignIn
 
 @main
 struct EmigrateInApp: App {
-    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
-    @StateObject var authViewModel = AuthenticationViewModel()
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    @StateObject private var authenticationViewModel: AuthenticationViewModel
+    @StateObject private var userProfileViewModel: UserProfileViewModel
+    @StateObject private var accountDeletionViewModel: AccountDeletionViewModel
     
     // Speichert, ob der Nutzer das Onboarding bereits abgeschlossen hat.
     // @AppStorage speichert diesen Wert persistent auf dem Gerät (in UserDefaults).
     @AppStorage("hasCompletedOnboarding") var hasCompletedOnboarding: Bool = false
     
     // State für die Anzeige des Splash Screens
-    @State private var showingSplashScreen = true
+    @State private var showingSplashScreen: Bool
     
     let backgroundGradient = AppStyles.backgroundGradient
     
     let splashScreenFullText: String = "EmigrateIn - Dein Zuhause im Ausland startet hier!"
     
-    // Initialisierer der App-Struktur
     init() {
-        print("App init() aufgerufen.") // Debug-Ausgabe
+        let launchArguments = ProcessInfo.processInfo.arguments
+#if DEBUG
+        if launchArguments.contains("-resetOnboarding") {
+            UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
+        }
+#endif
+        _showingSplashScreen = State(initialValue: !launchArguments.contains("-skipSplash"))
+
+        let authenticationService = FirebaseAuthenticationService()
+        let profileRepository = UserProfileRepository()
+        _authenticationViewModel = StateObject(
+            wrappedValue: AuthenticationViewModel(authenticationService: authenticationService)
+        )
+        _userProfileViewModel = StateObject(
+            wrappedValue: UserProfileViewModel(
+                repository: profileRepository,
+                authenticationService: authenticationService
+            )
+        )
+        _accountDeletionViewModel = StateObject(
+            wrappedValue: AccountDeletionViewModel(
+                authenticationService: authenticationService,
+                profileRepository: profileRepository
+            )
+        )
     }
     
     var body: some Scene {
@@ -44,11 +68,6 @@ struct EmigrateInApp: App {
                             let textAnimationDuration = 1.0 + (Double(splashScreenFullText.count) * 0.05)
                             let totalSplashScreenAnimationTime = max(logoAnimationTotalDuration, textAnimationDuration)
                             let finalDelayBeforeTransition = totalSplashScreenAnimationTime + 0.5
-                            
-                            print("Logo Animation Dauer: \(logoAnimationTotalDuration)s")
-                            print("Text Animation Dauer: \(textAnimationDuration)s")
-                            print("Gesamt Splash Screen Animationsdauer: \(totalSplashScreenAnimationTime)s")
-                            print("Endgültige Verzögerung vor Übergang: \(finalDelayBeforeTransition)s")
                             
                             DispatchQueue.main.asyncAfter(deadline: .now() + finalDelayBeforeTransition) {
                                 withAnimation(.easeOut(duration: 0.5)) {
@@ -72,13 +91,13 @@ struct EmigrateInApp: App {
                             insertion: .move(edge: .bottom),
                             removal: .opacity)
                         )
-                        .environmentObject(authViewModel) // Übergibt das ViewModel an ContentView und dessen Kinder
+                        .environmentObject(authenticationViewModel)
+                        .environmentObject(userProfileViewModel)
+                        .environmentObject(accountDeletionViewModel)
                 }
             }
             .onOpenURL { incomingURL in
                 // Diese Funktion wird aufgerufen, wenn die App über ein URL Scheme geöffnet wird.
-                print("App wurde mit URL geöffnet: \(incomingURL)") // Debug-Ausgabe
-                // Leite die URL an das Google Sign-In SDK weiter, damit es den Login abschließen kann.
                 GIDSignIn.sharedInstance.handle(incomingURL)
             }
             .animation(.default, value: showingSplashScreen)

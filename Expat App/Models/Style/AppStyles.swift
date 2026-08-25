@@ -12,18 +12,18 @@ import SwiftUI
 // Eine Struktur, um wiederverwendbare Design-Elemente zu bündeln
 // Angepasste Farben für den Verlauf, um besseren Kontrast mit hellem Text zu gewährleisten
 struct AppStyles {
-    static var gradientColors: [Color] = [
+    static let gradientColors: [Color] = [
         Color(red: 0.1, green: 0.55, blue: 0.55), // Helleres Petrol für innen
         Color(red: 0.05, green: 0.45, blue: 0.45)   // Dunkleres Petrol für außen
     ]
     
     // Definiert den radialen Farbverlauf zentral
-    static var backgroundGradient: RadialGradient {
-        RadialGradient(
+    static var backgroundGradient: LinearGradient {
+        LinearGradient(
             gradient: Gradient(colors: gradientColors),
-            center: .center,
-            startRadius: 20,
-            endRadius: UIScreen.main.bounds.width * 0.8) // Endradius, der sich etwas an die Breite anpasst
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
     }
     
     // Definiert die Textfarben zentral
@@ -31,8 +31,8 @@ struct AppStyles {
     static let secondaryTextColor = Color(white: 0.85)
     static let buttonTextColor = gradientColors.last ?? Color(red: 40, green: 100, blue: 40)
     static let buttonBackgroundColor = primaryTextColor // Fast weiß
-    static let destructiveColor = Color(red: 200, green: 0, blue: 0) // Solides, dunkleres Rot
-    static let destructiveTextColor = Color(.black)
+    static let destructiveColor = Color(red: 0.72, green: 0.08, blue: 0.08)
+    static let destructiveTextColor = Color.white
     
     // MARK: - NEU: Farben für Grid-Elemente
     // Eine passende Akzentfarbe, die mit Petrol harmoniert (z.B. ein helles Gold oder ein helles Türkis)

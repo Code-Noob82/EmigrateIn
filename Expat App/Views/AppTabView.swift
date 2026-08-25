@@ -9,7 +9,7 @@ import SwiftUI
 
 // MARK: - AppTabView (Hauptansicht nach Login)
 struct AppTabView: View {
-    @EnvironmentObject var authViewModel: AuthenticationViewModel // Zugriff auf das ViewModel
+    @State private var selectedTab: TabSelection = .home
     
     let backgroundGradient = AppStyles.backgroundGradient
     
@@ -30,21 +30,21 @@ struct AppTabView: View {
             backgroundGradient
                 .ignoresSafeArea()
             
-            TabView(selection: $authViewModel.selectedTab) {
+            TabView(selection: $selectedTab) {
                 Tab("Start", systemImage: "house.fill", value: .home) {
-                    InfoCategoryListView().environmentObject(authViewModel)
+                    InfoCategoryListView()
                 }
                 Tab("Checklisten", systemImage: "checklist.checked", value: .checklists) {
-                    ChecklistCategoryListView().environmentObject(authViewModel)
+                    ChecklistCategoryListView()
                 }
                 Tab("Botschaft", systemImage: "building.columns.fill", value: .embassy) {
                     EmbassyInfoView()
                 }
                 Tab("Profil", systemImage: "person.crop.circle.fill", value: .profile) {
-                    ProfileView().environmentObject(authViewModel)
+                    ProfileView(selectedTab: $selectedTab)
                 }
                 Tab("Einstellungen", systemImage: "gearshape.fill", value: .settings) {
-                    SettingsView().environmentObject(authViewModel)
+                    SettingsView()
                 }
             }
             .toolbarColorScheme(.light, for: .tabBar)
@@ -55,4 +55,6 @@ struct AppTabView: View {
 #Preview("AppTabView") {
     AppTabView()
         .environmentObject(AuthenticationViewModel())
+        .environmentObject(UserProfileViewModel())
+        .environmentObject(AccountDeletionViewModel())
 }

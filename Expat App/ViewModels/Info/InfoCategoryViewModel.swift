@@ -7,35 +7,24 @@
 
 import Foundation
 import SwiftUI
-import FirebaseFirestore
 
 @MainActor
 class InfoCategoryViewModel: ObservableObject {
     @Published var categories: [InfoCategory] = []
     @Published var isLoading = false
-    @Published var errorMessage: String? = nil
+    @Published var errorMessage: String?
     
     private let repository: ContentRepositoryProtocol
     
     init(repository: ContentRepositoryProtocol = ContentRepository()) {
         self.repository = repository
-        Task {
-            await fetchCategories()
-        }
     }
     
     func fetchCategories() async {
-        guard !isLoading else {
-            print("Fetch skipped: Already loading.")
-            return
-        }
-        guard categories.isEmpty else {
-            print("Fetch skipped: Categories already popuplated.")
-            return
-        }
+        guard !isLoading else { return }
+        guard categories.isEmpty else { return }
         isLoading = true
         errorMessage = nil
-        print("Fetching Info Categories...")
         
         do {
             self.categories = try await repository.fetchInfoCategories()
