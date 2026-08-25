@@ -1,0 +1,54 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userID) {
+      return isSignedIn() && request.auth.uid == userID;
+    }
+
+    match /info_categories/{documentID} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    match /info_content/{documentID} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    match /checklist_categories/{documentID} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    match /checklist_items/{documentID} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    match /state_specific_info/{documentID} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    match /user_profiles/{userID} {
+      allow read, create, update, delete: if isOwner(userID);
+    }
+
+    match /user_checklist_states/{userID} {
+      allow read, create, update, delete: if isOwner(userID);
+
+      match /completed_items/{itemID} {
+        allow read, create, update, delete: if isOwner(userID);
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

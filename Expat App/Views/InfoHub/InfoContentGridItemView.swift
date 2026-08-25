@@ -36,6 +36,12 @@ struct InfoContentGridItemView: View {
         }
         // Zusätzlicher Modifikator, falls du den "Tap"-Effekt für die Grid-Elemente möchtest
         .buttonStyle(LinkPressEffect()) // Optional: Für einen visuellen Feedback beim Tippen
+        .accessibilityLabel(contentItem.title)
+        .accessibilityHint(
+            authViewModel.isAnonymousUser
+                ? "Erfordert eine Anmeldung"
+                : "Öffnet den vollständigen Inhalt"
+        )
     }
     
     // Inhalt des Grid-Elements (visueller Teil)
@@ -70,9 +76,8 @@ struct InfoContentGridItemView: View {
                     .padding(.top, 4)
             }
         }
-        .padding() // Innenabstand für das gesamte Grid-Element
-        // Feste Größe für jedes Grid-Element, wie in InfoCategoryGridItemView
-        .frame(width: 160, height: 160) // Beispielgröße, anpassen
+        .padding()
+        .frame(maxWidth: .infinity, minHeight: 160)
         .background(AppStyles.cellBackgroundColor.opacity(0.5)) // Etwas Transparenz
         .cornerRadius(15)
         .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 5)

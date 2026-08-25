@@ -44,12 +44,6 @@ class EmbassyInfoViewModel: ObservableObject {
             let names = try await repository.fetchAllCountryNames()
             self.allCountryNames = names
             
-            print("EmbassyInfoViewModel: Direkt nach Zuweisung hat self.allCountryNames \(self.allCountryNames.count) Einträge.")
-            print("EmbassyInfoViewModel: Die ersten 10 Länder in self.allCountryNames: \(self.allCountryNames.prefix(10))")
-            if self.allCountryNames.count > 10 { // Nur ausgeben, wenn mehr als 10 vorhanden sind
-                print("EmbassyInfoViewModel: Die letzten 10 Länder in self.allCountryNames: \(self.allCountryNames.suffix(10))")
-            }
-            
             if names.isEmpty {
                 self.countryListErrorMessage = "Keine Länder von der API geladen."
                 self.selectedCountryName = placeholderCountryName
@@ -58,12 +52,10 @@ class EmbassyInfoViewModel: ObservableObject {
             self.countryListErrorMessage = "Fehler beim Laden der Länderliste: \(apiError.errorDescription ?? "Unbekannter Fehler")"
             self.allCountryNames = [] // Leert die Liste bei Fehler
             self.selectedCountryName = placeholderCountryName // Setzt auf Platzhalter zurück
-            print("EmbassyInfoViewModel: ApiError loading country names: \(apiError.localizedDescription)")
         } catch {
             self.countryListErrorMessage = "Ein unerwarteter Fehler ist beim Laden der Länderliste aufgetreten."
             self.allCountryNames = []
             self.selectedCountryName = placeholderCountryName
-            print("EmbassyInfoViewModel: Unexpected error loading country names: \(error.localizedDescription)")
         }
         isLoadingCountries = false
     }
@@ -92,11 +84,9 @@ class EmbassyInfoViewModel: ObservableObject {
         } catch let apiError as ApiError {
             self.errorMessage = apiError.errorDescription
             self.displayContent = .none
-            print("EmbassyInfoViewModel: ApiError fetching embassy for '\(selectedCountryName)' - \(apiError)")
         } catch {
             self.errorMessage = "Ein unerwarteter Fehler ist aufgetreten."
             self.displayContent = .none
-            print("EmbassyInfoViewModel: Unexpected error fetching embassy for '\(selectedCountryName)' - \(error.localizedDescription)")
         }
         isLoading = false
     }
@@ -128,11 +118,9 @@ class EmbassyInfoViewModel: ObservableObject {
         } catch let apiError as ApiError {
             self.allRepresentationsErrorMessage = "Fehler beim Laden aller Vertretungen: \(apiError.errorDescription ?? "Unbekannter Fehler")"
             self.displayContent = .none
-            print("EmbassyInfoViewModel: Fetch all representations failed: \(apiError.localizedDescription)")
         } catch {
             self.allRepresentationsErrorMessage = "Ein unerwarteter Fehler ist beim Laden aller Vertretungen aufgetreten."
             self.displayContent = .none
-            print("EmassyInfoViewModel: Fetch all representations failed: \(error.localizedDescription)")
         }
         isLoadingAllRepresentations = false
     }

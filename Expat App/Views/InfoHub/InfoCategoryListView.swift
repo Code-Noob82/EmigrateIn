@@ -65,8 +65,7 @@ struct InfoCategoryListView: View {
                     } else {
                         ScrollView {
                             let columns = [
-                                GridItem(.flexible()),
-                                GridItem(.flexible())
+                                GridItem(.adaptive(minimum: 150, maximum: 240), spacing: 16)
                             ]
                             LazyVGrid(columns: columns, spacing: 16) {
                                 ForEach(viewModel.categories) { category in
@@ -74,6 +73,8 @@ struct InfoCategoryListView: View {
                                         InfoCategoryGridItemView(category: category)
                                     }
                                     .buttonStyle(.plain)
+                                    .accessibilityLabel(category.title)
+                                    .accessibilityHint("Öffnet die Inhalte dieser Kategorie")
                                 }
                             }
                             .padding(.horizontal)
@@ -86,8 +87,10 @@ struct InfoCategoryListView: View {
             .toolbarBackground(backgroundGradient, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarColorScheme(AppStyles.primaryTextColor.isDark ? .light : .dark, for: .navigationBar)
-            .task {
-                if viewModel.categories.isEmpty && viewModel.errorMessage == nil {
+            .task(id: authViewModel.session?.id) {
+                if authViewModel.isAuthenticated,
+                   viewModel.categories.isEmpty,
+                   viewModel.errorMessage == nil {
                     await viewModel.fetchCategories()
                 }
             }
@@ -105,11 +108,10 @@ struct InfoCategoryListView: View {
             .navigationDestination(for: InfoCategory.self) { selectedCategory in
                 InfoContentListView(category: selectedCategory)
             }
+            .navigationDestination(for: InfoContent.self) { selectedContent in
+                InfoContentDetailView(contentItem: selectedContent)
+            }
         }
-    }
-    
-    private func getInfoContent(for category: InfoCategory) -> [InfoContent]? {
-        return nil
     }
 }
 

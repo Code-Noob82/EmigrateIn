@@ -47,7 +47,7 @@ struct ErrorDisplayView: View {
 // MARK: - Preview
 #Preview("Error Display") {
     ErrorDisplayView(title: "Verbindungsfehler", message: "Es konnte keine Verbindung zum Server hergestellt werden. Bitte überprüfe deine Internetverbindung und versuche es erneut.") {
-        print("Erneut versuchen getippt!")
+        // Vorschau ohne Seiteneffekt.
     }
     .background(AppStyles.backgroundGradient.ignoresSafeArea())
 }

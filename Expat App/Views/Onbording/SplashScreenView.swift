@@ -15,34 +15,40 @@ struct SplashScreenView: View {
     let fullText: String = "EmigrateIn - Dein smarter Weg ins Ausland"
     
     var body: some View {
-        ZStack {
-            AppStyles.backgroundGradient
-                .ignoresSafeArea()
-            
-            Image("WorldMap")
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: UIScreen.main.bounds.width * 0.9, height: UIScreen.main.bounds.width * 0.9)
-                .opacity(mapOpacity).opacity(0.5)
-                .animation(.easeIn(duration: 2.0), value: mapOpacity)
-                .blendMode(.luminosity)
-            
-            VStack(spacing: 8) {
-                Image("1024")
+        GeometryReader { proxy in
+            let imageSize = min(proxy.size.width * 0.9, proxy.size.height * 0.55, 420)
+
+            ZStack {
+                AppStyles.backgroundGradient
+                    .ignoresSafeArea()
+
+                Image("WorldMap")
                     .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 361, height: 361)
-                    .opacity(logoOpacity)
-                    .animation(.easeIn(duration: 1.5), value: logoOpacity)
-                
-                Text(animatedText)
-                    .font(.callout)
-                    .fontWeight(.black)
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(AppStyles.primaryTextColor)
-                    .transition(.opacity)
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: imageSize, height: imageSize)
+                    .opacity(mapOpacity * 0.5)
+                    .animation(.easeIn(duration: 2.0), value: mapOpacity)
+                    .blendMode(.luminosity)
+                    .accessibilityHidden(true)
+
+                VStack(spacing: 8) {
+                    Image("1024")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: imageSize, height: imageSize)
+                        .opacity(logoOpacity)
+                        .animation(.easeIn(duration: 1.5), value: logoOpacity)
+                        .accessibilityHidden(true)
+
+                    Text(animatedText)
+                        .font(.callout)
+                        .fontWeight(.black)
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(AppStyles.primaryTextColor)
+                        .transition(.opacity)
+                }
+                .padding()
             }
-            .padding()
         }
         .onAppear {
             startMapAnimation()

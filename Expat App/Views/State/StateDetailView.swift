@@ -10,7 +10,7 @@ import FirebaseFirestore
 import MarkdownUI
 
 struct StateDetailView: View {
-    @EnvironmentObject var authViewModel: AuthenticationViewModel
+    @EnvironmentObject var profileViewModel: UserProfileViewModel
     
     var body: some View {
         ZStack {
@@ -19,12 +19,12 @@ struct StateDetailView: View {
             
             ScrollView {
                 VStack(alignment: .leading, spacing: 15) {
-                    if authViewModel.isLoadingStateDetails {
+                    if profileViewModel.isLoadingStateDetails {
                         ProgressView("Lade Bundesland-Details...")
                             .padding()
                             .tint(AppStyles.primaryTextColor)
                         
-                    } else if let details = authViewModel.selectedStateDetails {
+                    } else if let details = profileViewModel.selectedStateDetails {
                         // Haupttitel des Bundeslandes
                         Text(details.stateName)
                             .font(.largeTitle)
@@ -88,7 +88,7 @@ struct StateDetailView: View {
                             }
                         }
                         Spacer()
-                    } else if let errorMessage = authViewModel.inlineMessage, errorMessage.contains("Bundesland-Details") {
+                    } else if let errorMessage = profileViewModel.errorMessage {
                         Text(errorMessage)
                             .foregroundColor(.red)
                             .padding()
@@ -101,21 +101,17 @@ struct StateDetailView: View {
                 .padding()
             }
         }
-        .navigationTitle("Infos für \(authViewModel.selectedStateDetails?.stateName ?? authViewModel.homeStateName ?? "dein Bundesland")")
+        .navigationTitle("Infos für \(profileViewModel.selectedStateDetails?.stateName ?? profileViewModel.homeStateName ?? "dein Bundesland")")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(AppStyles.backgroundGradient, for: .navigationBar) // Navigation Bar Hintergrund
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbarColorScheme(AppStyles.primaryTextColor.isDark ? .light : .dark, for: .navigationBar)
         .onAppear {
-            print("DEBUG: StateDetailView appeared")
-            if authViewModel.selectedStateDetails == nil ||
-                authViewModel.selectedStateDetails?.id != authViewModel.userProfile?.homeStateId {
-                print("DEBUG: Lade Bundesland-Details onAppear")
+            if profileViewModel.selectedStateDetails == nil ||
+                profileViewModel.selectedStateDetails?.id != profileViewModel.userProfile?.homeStateId {
                 Task {
-                    await authViewModel.fetchSelectedStateDetails()
+                    await profileViewModel.fetchSelectedStateDetails()
                 }
-            } else {
-                print("DEBUG: Details sind bereits geladen")
             }
         }
     }
@@ -123,6 +119,5 @@ struct StateDetailView: View {
 
 #Preview {
     StateDetailView()
-        .environmentObject(AuthenticationViewModel())
+        .environmentObject(UserProfileViewModel())
 }
-

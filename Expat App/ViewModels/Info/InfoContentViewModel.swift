@@ -7,13 +7,12 @@
 
 import Foundation
 import SwiftUI
-import FirebaseFirestore
 
 @MainActor
 class InfoContentViewModel: ObservableObject {
     @Published var contentItems: [InfoContent] = []
     @Published var isLoading = false
-    @Published var errorMessage: String? = nil
+    @Published var errorMessage: String?
     
     private let repository: ContentRepositoryProtocol
     private let categoryId: String
@@ -21,11 +20,6 @@ class InfoContentViewModel: ObservableObject {
     init(categoryId: String, repository: ContentRepositoryProtocol = ContentRepository()) {
         self.categoryId = categoryId
         self.repository = repository
-        Task {
-            if contentItems.isEmpty && !isLoading {
-                await fetchContent()
-            }
-        }
     }
     
     func fetchContent() async {

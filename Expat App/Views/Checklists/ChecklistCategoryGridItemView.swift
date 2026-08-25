@@ -43,9 +43,8 @@ struct ChecklistCategoryGridItemView: View {
             //     .font(.subheadline)
             //     .foregroundColor(AppStyles.accentColor)
         }
-        .padding() // Innenabstand für das gesamte Grid-Element
-        // MARK: - Feste Größe für Grid-Elemente
-        .frame(width: 160, height: 160) // Feste Größe, anpassen falls nötig
+        .padding()
+        .frame(maxWidth: .infinity, minHeight: 160)
         // MARK: - Hintergrund und Rand
         .background(AppStyles.cellBackgroundColor.opacity(0.5)) // Etwas Transparenz
         .cornerRadius(15) // Abgerundete Ecken
@@ -54,6 +53,7 @@ struct ChecklistCategoryGridItemView: View {
             RoundedRectangle(cornerRadius: 15)
                 .stroke(AppStyles.borderColor.opacity(0.8), lineWidth: 1) // Rand mit Transparenz
         )
+        .accessibilityElement(children: .combine)
     }
 }
 

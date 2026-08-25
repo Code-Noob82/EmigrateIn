@@ -86,16 +86,14 @@ struct ChecklistCategoryListView: View {
             }
             .alert("Registrierung erforderlich", isPresented: $showRegistrationPrompt) {
                 Button("Registrieren") {
-                    Task {
-                        authViewModel.switchToRegistrationFromAnonymous()
-                    }
+                    authViewModel.switchToRegistrationFromAnonymous()
                 }
                 .foregroundColor(AppStyles.primaryTextColor)
                 Button("Abbrechen", role: .cancel) {
                 }
                 .foregroundColor(AppStyles.destructiveColor)
             } message: {
-                Text("Um auf personalisierte Checklisten zugreifen zu können, registriere dich bitte oder melde dich an.")
+                Text("Registriere dein Gastkonto, um auf personalisierte Checklisten zugreifen zu können.")
             }
         }
     }
@@ -104,8 +102,7 @@ struct ChecklistCategoryListView: View {
     private var categoryListContent: some View {
         ScrollView {
             let columns = [
-                GridItem(.flexible()),
-                GridItem(.flexible())
+                GridItem(.adaptive(minimum: 150, maximum: 240), spacing: 16)
             ]
             LazyVGrid(columns: columns, spacing: 16) {
                 ForEach(viewModel.categories) { category in
@@ -116,6 +113,8 @@ struct ChecklistCategoryListView: View {
                     }
                     .buttonStyle(.plain)
                     .buttonStyle(LinkPressEffect())
+                    .accessibilityLabel(category.title)
+                    .accessibilityHint("Öffnet die Checkliste")
                 }
             }
             .padding(.horizontal)

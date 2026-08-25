@@ -29,6 +29,8 @@ struct RegistrationView: View {
                             .padding()
                             .background(Color(.secondarySystemBackground))
                             .cornerRadius(20)
+                            .accessibilityLabel("E-Mail-Adresse")
+                            .accessibilityIdentifier("registration.email")
                         ZStack(alignment: .trailing) {
                             if isPasswordVisible {
                                 TextField("Passwort festlegen", text: $viewModel.password)
@@ -50,6 +52,7 @@ struct RegistrationView: View {
                                     .foregroundColor(.gray)
                                     .padding(.trailing, 15)
                             }
+                            .accessibilityLabel(isPasswordVisible ? "Passwort ausblenden" : "Passwort anzeigen")
                         }
                         ZStack(alignment: .trailing) {
                             if isConfirmPasswordVisible {
@@ -72,9 +75,10 @@ struct RegistrationView: View {
                                     .foregroundColor(.gray)
                                     .padding(.trailing, 15)
                             }
+                            .accessibilityLabel(isConfirmPasswordVisible ? "Passwortbestätigung ausblenden" : "Passwortbestätigung anzeigen")
                         }
                         Button {
-                            viewModel.signUpWithEmail()
+                            Task { await viewModel.signUpWithEmail() }
                         } label: {
                             HStack {
                                 Image(systemName: "person.fill.checkmark")
@@ -88,6 +92,7 @@ struct RegistrationView: View {
                         .foregroundColor(AppStyles.buttonTextColor)
                         .clipShape(Capsule())
                         .disabled(viewModel.isLoading)
+                        .accessibilityIdentifier("registration.submit")
                         
                         Divider().padding(.vertical, 10)
                         Text("Alternative Anmeldemethode nutzen")
@@ -102,7 +107,7 @@ struct RegistrationView: View {
                                     .resizable()
                                     .aspectRatio(contentMode: .fit)
                                     .frame(width: 20, height: 20)
-                                Text("Sign in with Google")
+                                Text(viewModel.isUpgradingAnonymousUser ? "Mit Google registrieren" : "Sign in with Google")
                                     .font(.system(size: 18, weight: .semibold))
                             }
                             .padding()
@@ -118,16 +123,27 @@ struct RegistrationView: View {
                 }
                 Divider().padding(.vertical, 10)
                 // Fixierter Footer
-                HStack {
-                    Text("Bereits ein Konto?")
-                        .font(.subheadline)
-                        .foregroundColor(AppStyles.secondaryTextColor)
-                    Button("Einloggen") {
-                        withAnimation(.easeInOut(duration: 0.4)) {
-                            viewModel.currentAuthView = .login
+                Group {
+                    if viewModel.isUpgradingAnonymousUser {
+                        Button("Zurück zur App") {
+                            withAnimation(.easeInOut(duration: 0.4)) {
+                                viewModel.cancelAnonymousUpgrade()
+                            }
+                        }
+                        .buttonStyle(TextLinkButtonStyle(textColor: AppStyles.primaryTextColor))
+                    } else {
+                        HStack {
+                            Text("Bereits ein Konto?")
+                                .font(.subheadline)
+                                .foregroundColor(AppStyles.secondaryTextColor)
+                            Button("Einloggen") {
+                                withAnimation(.easeInOut(duration: 0.4)) {
+                                    viewModel.currentAuthView = .login
+                                }
+                            }
+                            .buttonStyle(TextLinkButtonStyle(textColor: AppStyles.primaryTextColor))
                         }
                     }
-                    .buttonStyle(TextLinkButtonStyle(textColor: AppStyles.primaryTextColor))
                 }
                 .padding() // Padding für den Footer selbst
                 .ignoresSafeArea(.keyboard, edges: .bottom)

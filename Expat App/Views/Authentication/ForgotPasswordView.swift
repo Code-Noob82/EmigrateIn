@@ -34,7 +34,7 @@ struct ForgotPasswordView: View {
                             .cornerRadius(20)
                         
                         Button {
-                            viewModel.forgotPassword()
+                            Task { await viewModel.forgotPassword() }
                         } label: {
                             Image(systemName: "envelope.circle.fill")
                             Text("Link senden")

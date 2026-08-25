@@ -28,6 +28,8 @@ struct LoginView: View {
                             .padding()
                             .background(Color(.secondarySystemBackground))
                             .cornerRadius(20)
+                            .accessibilityLabel("E-Mail-Adresse")
+                            .accessibilityIdentifier("login.email")
                         ZStack(alignment: .trailing) {
                             if isPasswordVisible {
                                 TextField("Passwort", text: $viewModel.password)
@@ -36,11 +38,13 @@ struct LoginView: View {
                                     .cornerRadius(20)
                                     .autocapitalization(.none)
                                     .disableAutocorrection(true)
+                                    .accessibilityLabel("Passwort")
                             } else {
                                 SecureField("Passwort", text: $viewModel.password)
                                     .padding()
                                     .background(Color(.secondarySystemBackground))
                                     .cornerRadius(20)
+                                    .accessibilityLabel("Passwort")
                             }
                             Button(action: {
                                 isPasswordVisible.toggle()
@@ -49,10 +53,11 @@ struct LoginView: View {
                                     .foregroundColor(.gray)
                                     .padding(.trailing, 15)
                             }
+                            .accessibilityLabel(isPasswordVisible ? "Passwort ausblenden" : "Passwort anzeigen")
                         }
                         
                         Button {
-                            viewModel.signInWithEmail()
+                            Task { await viewModel.signInWithEmail() }
                         } label: {
                             HStack {
                                 Image(systemName: "person.fill.checkmark")
@@ -66,6 +71,7 @@ struct LoginView: View {
                         .foregroundColor(AppStyles.buttonTextColor)
                         .clipShape(Capsule())
                         .disabled(viewModel.isLoading) // Deaktivieren während Laden
+                        .accessibilityIdentifier("login.submit")
                         HStack {
                             Text("Passwort vergessen?")
                                 .font(.subheadline)
@@ -104,6 +110,7 @@ struct LoginView: View {
                             .clipShape(Capsule())
                         }
                         .disabled(viewModel.isLoading)
+                        .accessibilityHint("Meldet dich mit deinem Google-Konto an")
                         
                         Button {
                             Task {
@@ -123,6 +130,7 @@ struct LoginView: View {
                         }
                         .padding(.top, 10)
                         .disabled(viewModel.isLoading)
+                        .accessibilityHint("Öffnet die App mit eingeschränkten Gastfunktionen")
                     }
                     .padding()
                 }
